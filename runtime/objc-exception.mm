@@ -76,7 +76,6 @@ void objc_exception_throw(id exception) {
         backtrace_symbols_fd(callstack, frameCount, fileno(stderr));
     }
 
-    OBJC_RUNTIME_OBJC_EXCEPTION_THROW(exception);  // dtrace probe to log throw activity.
     xtab.throw_exc(exception);
     _objc_fatal("objc_exception_throw failed");
 }
@@ -280,13 +279,6 @@ OBJC_EXTERN uintptr_t _Unwind_GetLanguageSpecificData(struct _Unwind_Context *);
 // C++ runtime types and functions
 // copied from cxxabi.h
 
-OBJC_EXTERN void *__cxa_allocate_exception(size_t thrown_size);
-OBJC_EXTERN void __cxa_throw(void *exc, void *typeinfo, void (*destructor)(void *)) __attribute__((noreturn));
-OBJC_EXTERN void *__cxa_begin_catch(void *exc);
-OBJC_EXTERN void __cxa_end_catch(void);
-OBJC_EXTERN void __cxa_rethrow(void);
-OBJC_EXTERN void *__cxa_current_exception_type(void);
-
 #if SUPPORT_ZEROCOST_EXCEPTIONS
 #   define CXX_PERSONALITY __gxx_personality_v0
 #else
@@ -484,7 +476,9 @@ static void _objc_exception_destructor(void *exc_gen) {
 #endif
 }
 
-
+#include "/ios-gaming/sdk/usr/include/c++/v1/cxxabi.h"
+#include <__exception/terminate.h>
+using namespace __cxxabiv1;
 void objc_exception_throw(id obj)
 {
     struct objc_exception *exc = (struct objc_exception *)
@@ -516,8 +510,7 @@ void objc_exception_throw(id obj)
         backtrace_symbols_fd(callstack, frameCount, fileno(stderr));
     }
     
-    OBJC_RUNTIME_OBJC_EXCEPTION_THROW(obj);  // dtrace probe to log throw activity
-    __cxa_throw(exc, &exc->tinfo, &_objc_exception_destructor);
+    __cxa_throw(exc, const_cast<std::type_info*>(&typeid(*exc)), &_objc_exception_destructor);
     __builtin_trap();
 }
 
@@ -529,7 +522,6 @@ void objc_exception_rethrow(void)
         _objc_inform("EXCEPTIONS: rethrowing current exception");
     }
     
-    OBJC_RUNTIME_OBJC_EXCEPTION_RETHROW(); // dtrace probe to log throw activity.
     __cxa_rethrow();
     __builtin_trap();
 }
@@ -598,7 +590,9 @@ static bool _objc_exception_do_catch(struct objc_typeinfo *catch_tinfo,
     return false;
 }
 
-
+#include "/ios-gaming/sdk/usr/include/c++/v1/cxxabi.h"
+#include <__exception/terminate.h>
+using namespace __cxxabiv1;
 /***********************************************************************
 * _objc_terminate
 * Custom std::terminate handler.
@@ -1367,7 +1361,7 @@ static void call_alt_handlers(struct _Unwind_Context *ctx)
 // SUPPORT_ALT_HANDLERS
 #endif
 
-
+#include <__exception/operations.h>
 /***********************************************************************
 * exception_init
 * Initialize libobjc's exception handling system.
@@ -1375,9 +1369,10 @@ static void call_alt_handlers(struct _Unwind_Context *ctx)
 **********************************************************************/
 void exception_init(void)
 {
-    old_terminate = std::set_terminate(&_objc_terminate);
+    old_terminate = set_terminate(&_objc_terminate);
 }
 
 
 // __OBJC2__
 #endif
+

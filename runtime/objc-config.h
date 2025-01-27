@@ -59,7 +59,7 @@
 #if TARGET_OS_WIN32  ||  TARGET_IPHONE_SIMULATOR
 #   define SUPPORT_PREOPT 0
 #else
-#   define SUPPORT_PREOPT 1
+#   define SUPPORT_PREOPT 0
 #endif
 
 // Define SUPPORT_DEBUGGER_MODE=1 to enable lock-avoiding execution for debuggers

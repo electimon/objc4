@@ -70,7 +70,6 @@
 #   include <libkern/OSAtomic.h>
 #   include <libkern/OSCacheControl.h>
 #   include <System/pthread_machdep.h>
-#   include "objc-probes.h"  // generated dtrace probe definitions.
 
 
 #if defined(__i386__) || defined(__x86_64__)
@@ -130,7 +129,6 @@ static inline int ARRSpinLockTry(ARRSpinLock *l)
     __END_DECLS
 #endif
 
-#if TARGET_IPHONE_SIMULATOR
     // getsectiondata() and getsegmentdata() are unavailable
     __BEGIN_DECLS
 #   define getsectiondata(m, s, n, c) objc_getsectiondata(m, s, n, c)
@@ -138,7 +136,6 @@ static inline int ARRSpinLockTry(ARRSpinLock *l)
     extern uint8_t *objc_getsectiondata(const struct mach_header *mh, const char *segname, const char *sectname, unsigned long *outSize);
     extern uint8_t * objc_getsegmentdata(const struct mach_header *mh, const char *segname, unsigned long *outSize);
     __END_DECLS
-#endif
 
 #   if __cplusplus
 #       include <vector>
@@ -220,7 +217,7 @@ extern void _objc_fatal(const char *fmt, ...) __attribute__((noreturn, format (p
 #define INIT_ONCE_PTR(var, create, delete)                              \
     do {                                                                \
         if (var) break;                                                 \
-        typeof(var) v = create;                                         \
+        __typeof(var) v = create;                                         \
         while (!var) {                                                  \
             if (OSAtomicCompareAndSwapPtrBarrier(0, (void*)v, (void**)&var)){ \
                 goto done;                                              \

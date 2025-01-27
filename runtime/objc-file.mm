@@ -26,7 +26,6 @@
 #include "objc-private.h"
 #include "objc-file.h"
 
-#if TARGET_IPHONE_SIMULATOR
 // getsectiondata() not yet available
 
 // 1. Find segment with file offset == 0 and file size != 0. This segment's
@@ -68,40 +67,52 @@ objc_getsectiondata(const struct mach_header *mh, const char *segname, const cha
 }
 
 static const struct segment_command *
-objc_getsegbynamefromheader(const mach_header *head, const char *segname)
+objc_getsegbynamefromheader(
+	const mach_header	*header,
+	const char		*seg_name)
 {
-    const struct segment_command *sgp;
-    unsigned long i;
+	segment_command *sgp;
+	unsigned long i;
 
-    sgp = (const struct segment_command *) (head + 1);
-    for (i = 0; i < head->ncmds; i++){
-        if (sgp->cmd == LC_SEGMENT) {
-            if (strncmp(sgp->segname, segname, sizeof(sgp->segname)) == 0) {
-                return sgp;
-            }
-        }
-        sgp = (const struct segment_command *)((char *)sgp + sgp->cmdsize);
-    }
-    return NULL;
+	sgp = (segment_command *)
+		((uintptr_t)header + sizeof(mach_header));
+	for (i = 0; i < header->ncmds; i++){
+		if (   sgp->cmd == LC_SEGMENT
+		    && !strncmp(sgp->segname, seg_name, sizeof(sgp->segname)))
+			return sgp;
+		sgp = (segment_command *)((uintptr_t)sgp + sgp->cmdsize);
+	}
+	return (segment_command *)NULL;
 }
 
-uint8_t *
-objc_getsegmentdata(const struct mach_header *mh, const char *segname, unsigned long *outSize)
+uint8_t * 
+objc_getsegmentdata(
+const struct mach_header *mhp,
+const char *segname,
+unsigned long *size)
 {
-    const struct segment_command *seg;
-    
-    seg = objc_getsegbynamefromheader(mh, segname);
-    if (seg) {
-        *outSize = seg->vmsize;
-        return (uint8_t *)seg->vmaddr + objc_getImageSlide(mh);
-    } else {
-        *outSize = 0;
-        return NULL;
-    }
-}
+    struct segment_command *sgp;
+    intptr_t slide;
+    uint32_t i;
 
+	slide = 0;
+	sgp = (struct segment_command *)
+	      ((char *)mhp + sizeof(struct mach_header));
+	for(i = 0; i < mhp->ncmds; i++){
+	    if(sgp->cmd == LC_SEGMENT){
+		if(strcmp(sgp->segname, "__TEXT") == 0){
+		    slide = (uintptr_t)mhp - sgp->vmaddr;
+		}
+		if(strncmp(sgp->segname, segname, sizeof(sgp->segname)) == 0){
+		    *size = sgp->vmsize;
+		    return((uint8_t *)(sgp->vmaddr + slide));
+		}
+	    }
+	    sgp = (struct segment_command *)((char *)sgp + sgp->cmdsize);
+	}
+	return(0);
+}
 // TARGET_IPHONE_SIMULATOR
-#endif
 
 #define GETSECT(name, type, sectname)                                   \
     type *name(const header_info *hi, size_t *outCount)  \
