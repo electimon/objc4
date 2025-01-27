@@ -349,12 +349,6 @@ __private_extern__ const char *_gcForHInfo(const header_info *hinfo)
     else if (_objcHeaderSupportsGC(hinfo)) return "supports GC";
     else return "does not support GC";
 }
-__private_extern__ const char *_gcForHInfo2(const header_info *hinfo)
-{
-    if (_objcHeaderRequiresGC(hinfo)) return " (requires GC)";
-    else if (_objcHeaderSupportsGC(hinfo)) return " (supports GC)";
-    else return "";
-}
 
 
 /***********************************************************************
@@ -585,14 +579,6 @@ map_images_nolock(enum dyld_image_states state, uint32_t infoCount,
         hList[hCount++] = hi;
         
 
-        if (PrintImages) {
-            _objc_inform("IMAGES: loading image for %s%s%s%s%s\n", 
-                         _nameForHeader(mhdr), 
-                         mhdr->filetype == MH_BUNDLE ? " (bundle)" : "", 
-                         _objcHeaderIsReplacement(hi) ? " (replacement)" : "",
-                         _objcHeaderOptimizedByDyld(hi)?" (preoptimized)" : "",
-                         _gcForHInfo2(hi));
-        }
     }
 
     // Perform one-time runtime initialization that must be deferred until 
@@ -701,14 +687,6 @@ unmap_image_nolock(const struct mach_header *mh, intptr_t vmaddr_slide)
     }
 
     if (!hi) return;
-
-    if (PrintImages) { 
-        _objc_inform("IMAGES: unloading image for %s%s%s%s\n", 
-                     _nameForHeader(hi->mhdr), 
-                     hi->mhdr->filetype == MH_BUNDLE ? " (bundle)" : "", 
-                     _objcHeaderIsReplacement(hi) ? " (replacement)" : "", 
-                     _gcForHInfo2(hi));
-    }
 
 #ifndef NO_GC
     if (UseGC) {

@@ -471,30 +471,6 @@ void _objcInit(void)
 }
 
 
-#if !TARGET_OS_WIN32
-/***********************************************************************
-* _objc_setNilReceiver
-**********************************************************************/
-id _objc_setNilReceiver(id newNilReceiver)
-{
-    id oldNilReceiver;
-
-    oldNilReceiver = _objc_nilReceiver;
-    _objc_nilReceiver = newNilReceiver;
-
-    return oldNilReceiver;
-}
-
-/***********************************************************************
-* _objc_getNilReceiver
-**********************************************************************/
-id _objc_getNilReceiver(void)
-{
-    return _objc_nilReceiver;
-}
-#endif
-
-
 /***********************************************************************
 * objc_setForwardHandler
 **********************************************************************/
@@ -891,7 +867,7 @@ static int DebuggerModeCount;
 **********************************************************************/
 int gdb_objc_startDebuggerMode(uint32_t flags)
 {
-    BOOL wantFull = flags & OBJC_DEBUGMODE_FULL;
+    BOOL wantFull = false;
     if (! DebuggerMode) {
         // Start debugger mode
         int mode = startDebuggerMode();  // Do this FIRST

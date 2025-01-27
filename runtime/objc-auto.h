@@ -95,9 +95,9 @@ OBJC_GC_EXPORT void objc_setCollectionRatio(size_t ratio);
 OBJC_GC_EXPORT void objc_startCollectorThread(void);
 
 /* Atomic update, with write barrier. */
-OBJC_GC_EXPORT BOOL objc_atomicCompareAndSwapPtr(id predicate, id replacement, volatile id *objectLocation) __OSX_AVAILABLE_STARTING(__MAC_10_6, __IPHONE_NA);
+OBJC_GC_EXPORT BOOL objc_atomicCompareAndSwapPtr(id predicate, id replacement, volatile id *objectLocation);
 /* "Barrier" version also includes memory barrier. */
-OBJC_GC_EXPORT BOOL objc_atomicCompareAndSwapPtrBarrier(id predicate, id replacement, volatile id *objectLocation) __OSX_AVAILABLE_STARTING(__MAC_10_6, __IPHONE_NA);
+OBJC_GC_EXPORT BOOL objc_atomicCompareAndSwapPtrBarrier(id predicate, id replacement, volatile id *objectLocation);
 
 // atomic update of a global variable
 OBJC_GC_EXPORT BOOL objc_atomicCompareAndSwapGlobal(id predicate, id replacement, volatile id *objectLocation);
@@ -142,7 +142,7 @@ OBJC_GC_EXPORT void objc_set_collection_ratio(size_t ratio);
 OBJC_GC_EXPORT void objc_start_collector_thread(void);
 
 /* Memory management */
-OBJC_EXPORT id objc_allocate_object(Class cls, int extra);
+//OBJC_EXPORT id objc_allocate_object(Class cls, int extra);
 
 /* Register/unregister the current thread with the garbage collector. */
 OBJC_GC_EXPORT void objc_registerThreadWithCollector();
@@ -154,6 +154,7 @@ OBJC_GC_EXPORT void objc_assertRegisteredThreadWithCollector();
 
 #ifdef OBJC_NO_GC
 
+OBJC_EXPORT id class_createInstance(Class cls, size_t extraBytes);
 /* Non-GC versions */
 
 static OBJC_INLINE void objc_collect(unsigned long options) { }
@@ -162,19 +163,11 @@ static OBJC_INLINE void objc_setCollectionThreshold(size_t threshold) { }
 static OBJC_INLINE void objc_setCollectionRatio(size_t ratio) { }
 static OBJC_INLINE void objc_startCollectorThread(void) { }
 
-#if TARGET_OS_WIN32
-static OBJC_INLINE BOOL objc_atomicCompareAndSwapPtr(id predicate, id replacement, volatile id *objectLocation) 
-    { void *original = InterlockedCompareExchangePointer((void * volatile *)objectLocation, (void *)replacement, (void *)predicate); return (original == predicate); }
-
-static OBJC_INLINE BOOL objc_atomicCompareAndSwapPtrBarrier(id predicate, id replacement, volatile id *objectLocation) 
-    { void *original = InterlockedCompareExchangePointer((void * volatile *)objectLocation, (void *)replacement, (void *)predicate); return (original == predicate); }
-#else
 static OBJC_INLINE BOOL objc_atomicCompareAndSwapPtr(id predicate, id replacement, volatile id *objectLocation) 
     { return OSAtomicCompareAndSwapPtr((void *)predicate, (void *)replacement, (void * volatile *)objectLocation); }
 
 static OBJC_INLINE BOOL objc_atomicCompareAndSwapPtrBarrier(id predicate, id replacement, volatile id *objectLocation) 
     { return OSAtomicCompareAndSwapPtrBarrier((void *)predicate, (void *)replacement, (void * volatile *)objectLocation); }
-#endif
 
 static OBJC_INLINE BOOL objc_atomicCompareAndSwapGlobal(id predicate, id replacement, volatile id *objectLocation) 
     { return objc_atomicCompareAndSwapPtr(predicate, replacement, objectLocation); }
@@ -217,7 +210,6 @@ static OBJC_INLINE void objc_set_collection_threshold(size_t threshold) { }
 static OBJC_INLINE void objc_set_collection_ratio(size_t ratio) { } 
 static OBJC_INLINE void objc_start_collector_thread(void) { }
 
-OBJC_EXPORT id class_createInstance(Class cls, size_t extraBytes);
 static OBJC_INLINE id objc_allocate_object(Class cls, int extra) 
     { return class_createInstance(cls, extra); }
 

@@ -36,9 +36,7 @@
 #include <objc/objc.h>
 #include <Availability.h>
 
-OBJC_EXPORT id objc_constructInstance(Class cls, void *bytes) 
-    __OSX_AVAILABLE_STARTING(__MAC_10_6,__IPHONE_NA);
-OBJC_EXPORT void *objc_destructInstance(id obj) 
-    __OSX_AVAILABLE_STARTING(__MAC_10_6,__IPHONE_NA);
+OBJC_EXPORT id objc_constructInstance(Class cls, void *bytes);
+OBJC_EXPORT void *objc_destructInstance(id obj) ;
 
 #endif

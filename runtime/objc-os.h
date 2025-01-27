@@ -66,7 +66,6 @@
 #   include <libkern/OSAtomic.h>
 #   include <libkern/OSCacheControl.h>
 #   include <System/pthread_machdep.h>
-#   include "objc-probes.h"  // generated dtrace probe definitions.
 
 #   if __cplusplus
 #       include <vector>
@@ -166,7 +165,6 @@ extern void _objc_fatal(const char *fmt, ...) __attribute__((noreturn, format (p
 #else
 #   define NO_DIRECT_THREAD_KEYS 1
 #endif
-
 
 #if TARGET_OS_WIN32
 

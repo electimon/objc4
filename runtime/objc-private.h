@@ -44,10 +44,6 @@
 
 #include "objc-auto.h"
 
-#define __APPLE_API_PRIVATE
-#include "objc-gdb.h"
-#undef __APPLE_API_PRIVATE
-
 /* Do not include message.h here. */
 /* #include "message.h" */
 
@@ -710,9 +706,6 @@ extern unsigned int MaxIdealFlushCachesCount;
 #endif
 
 // objc-gdb.h
-#if !TARGET_OS_WIN32
-BOOL _objc_dumpHeap(auto_zone_t *zone, const char *filename);
-#endif
 
 // encoding.h
 extern unsigned int encoding_getNumberOfArguments(const char *typedesc);
